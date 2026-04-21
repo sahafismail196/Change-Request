@@ -1,0 +1,462 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117; --bg2: #161b27; --bg3: #1e2535; --bg4: #252d3d;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0; --text2: #8892a4; --text3: #5a6478;
+  --accent: #4f8ef7; --accent2: #7c5cfc; --success: #34d399; --warn: #fbbf24; --danger: #f87171;
+  --radius: 10px; --radius2: 16px;
+}
+body { font-family: 'DM Sans', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+.wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius2); padding: 44px 40px; width: 440px; }
+.logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.logo-box { width: 36px; height: 36px; background: linear-gradient(135deg, #4f8ef7, #7c5cfc); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.page-h { font-size: 20px; font-weight: 600; }
+.sub { color: var(--text2); font-size: 13px; margin-bottom: 28px; margin-top: 4px; }
+.fl { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.lbl { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; }
+input, select, textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 13px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; transition: border .2s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 70px; }
+select option { background: var(--bg3); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius); border: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; transition: all .15s; }
+.btn-p { background: var(--accent); color: #fff; }
+.btn-p:hover { background: #3d7ef5; }
+.btn-g { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-g:hover { background: var(--bg3); color: var(--text); }
+.btn-d { background: rgba(248,113,113,.1); color: var(--danger); border: 1px solid rgba(248,113,113,.2); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.err { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.2); color: var(--danger); border-radius: var(--radius); padding: 9px 13px; font-size: 13px; margin-bottom: 14px; }
+.ok { background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.2); color: var(--success); border-radius: var(--radius); padding: 9px 13px; font-size: 13px; margin-bottom: 14px; }
+
+/* APP */
+.app { display: flex; min-height: 100vh; }
+.side { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; }
+.side-logo { display: flex; align-items: center; gap: 10px; padding: 0 18px 22px; border-bottom: 1px solid var(--border); margin-bottom: 10px; font-weight: 600; font-size: 15px; }
+.nav { display: flex; align-items: center; gap: 9px; padding: 9px 18px; cursor: pointer; color: var(--text2); font-size: 13px; transition: all .15s; border-left: 2px solid transparent; }
+.nav:hover { color: var(--text); background: var(--bg3); }
+.nav.on { color: var(--accent); background: rgba(79,142,247,.08); border-left-color: var(--accent); }
+.side-btm { margin-top: auto; padding: 14px 18px 0; border-top: 1px solid var(--border); }
+.av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#4f8ef7,#7c5cfc); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
+.main { flex: 1; overflow-y: auto; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 15px 26px; border-bottom: 1px solid var(--border); background: var(--bg2); }
+.ptitle { font-size: 16px; font-weight: 600; }
+.content { padding: 26px; }
+
+/* CUSTOMER CARDS */
+.cust-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 26px; }
+.cust-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
+.cust-logo { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); }
+.cust-initials { width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg,#4f8ef7,#7c5cfc); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #fff; }
+.cust-name { font-weight: 600; font-size: 14px; text-align: center; }
+.cust-poc { font-size: 12px; color: var(--text2); text-align: center; }
+.cust-del { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; }
+.cust-del:hover { color: var(--danger); background: rgba(248,113,113,.1); }
+
+/* TABLE */
+.tcard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; }
+.thead-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--bg3); }
+th { padding: 9px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); font-weight: 500; border-bottom: 1px solid var(--border); }
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.badge { display: inline-flex; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.b-low { background: rgba(52,211,153,.12); color: #34d399; }
+.b-med { background: rgba(251,191,36,.12); color: #fbbf24; }
+.b-high { background: rgba(248,113,113,.12); color: #f87171; }
+.b-crit { background: rgba(220,38,38,.15); color: #ff4444; border: 1px solid rgba(220,38,38,.2); }
+.b-app { background: rgba(52,211,153,.12); color: #34d399; }
+.b-rej { background: rgba(248,113,113,.12); color: #f87171; }
+.b-pend { background: rgba(251,191,36,.12); color: #fbbf24; }
+.b-def { background: rgba(79,142,247,.12); color: #4f8ef7; }
+
+/* MODAL */
+.ov { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius2); padding: 26px; width: 520px; max-height: 90vh; overflow-y: auto; max-width: 95vw; }
+.modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 18px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mac { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+
+/* LOGO UPLOAD */
+.upload-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 18px; text-align: center; cursor: pointer; transition: border .2s; }
+.upload-zone:hover { border-color: var(--accent); }
+.upload-preview { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; margin: 0 auto 8px; display: block; border: 1px solid var(--border); }
+
+.empty { text-align: center; padding: 50px 20px; color: var(--text2); }
+.spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: sp .7s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+
+/* STAT GRID */
+.sgrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.scard { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 18px; }
+.slbl { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 6px; font-weight: 500; }
+.snum { font-size: 26px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { createClient } = supabase;
+const SB_URL = 'https://vtbcpfrzpyvosvkqhaip.supabase.co';
+const SB_KEY = 'sb_publishable_ai_82BrEChInnh3ILp4QbA_6i83rEPF';
+let sb = createClient(SB_URL, SB_KEY);
+
+// STATE
+let step = 'login'; // login | app
+let user = null;
+let view = 'dashboard';
+let customers = [];
+let crs = [];
+let showCustModal = false;
+let showCRModal = false;
+let editCR = null;
+let loading = false;
+let err = '', msg = '';
+let logoDataUrl = '';
+let logoFile = null;
+let filterCust = '', filterCrit = '', filterCCB = '';
+
+// ── AUTH ──
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { user = session.user; await loadAll(); step = 'app'; }
+  render();
+}
+
+async function signIn(email, pw) {
+  if (!email||!pw) { err='Enter email and password.'; render(); return; }
+  loading=true; err=''; render();
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { err=error.message; loading=false; render(); return; }
+  user=data.user; await loadAll(); step='app'; loading=false; render();
+}
+
+async function signUp(email, pw) {
+  if (!email||!pw) { err='Enter email and password.'; render(); return; }
+  if (pw.length<6) { err='Password must be 6+ characters.'; render(); return; }
+  loading=true; err=''; msg=''; render();
+  const { data, error } = await sb.auth.signUp({ email, password: pw });
+  if (error) { err=error.message; loading=false; render(); return; }
+  if (data.session) { user=data.user; await loadAll(); step='app'; loading=false; render(); }
+  else { msg='✅ Check your email to confirm, then sign in. (Or disable "Confirm email" in Supabase Auth settings)'; loading=false; render(); }
+}
+
+async function signOut() {
+  await sb.auth.signOut(); user=null; step='login'; customers=[]; crs=[]; render();
+}
+
+// ── DATA ──
+async function loadAll() {
+  await Promise.all([loadCustomers(), loadCRs()]);
+}
+
+async function loadCustomers() {
+  const { data } = await sb.from('customers').select('*').order('created_at',{ascending:false});
+  if (data) customers = data;
+}
+
+async function loadCRs() {
+  const { data } = await sb.from('change_requests2').select('*, customers(name, logo_url)').order('created_at',{ascending:false});
+  if (data) crs = data;
+}
+
+async function saveCustomer(name, poc, email, logoDataUrl) {
+  if (!name) { alert('Customer name is required'); return; }
+  loading=true; render();
+  const { error } = await sb.from('customers').insert([{ name, poc_name: poc, poc_email: email, logo_url: logoDataUrl || null, user_id: user.id }]);
+  if (error) alert('Error: '+error.message);
+  else { await loadCustomers(); showCustModal=false; logoDataUrl=''; }
+  loading=false; render();
+}
+
+async function deleteCustomer(id) {
+  if (!confirm('Delete this customer?')) return;
+  await sb.from('customers').delete().eq('id',id);
+  await loadCustomers(); render();
+}
+
+async function saveCRRecord(d) {
+  if (!d.customer_id||!d.request) { alert('Customer and Request are required'); return; }
+  loading=true; render();
+  let error;
+  if (editCR) {
+    ({ error } = await sb.from('change_requests2').update({...d, user_id:user.id}).eq('id',editCR.id));
+  } else {
+    ({ error } = await sb.from('change_requests2').insert([{...d, user_id:user.id}]));
+  }
+  if (error) alert('Error: '+error.message);
+  else { await loadCRs(); showCRModal=false; editCR=null; }
+  loading=false; render();
+}
+
+async function deleteCRRecord(id) {
+  if (!confirm('Delete this change request?')) return;
+  await sb.from('change_requests2').delete().eq('id',id);
+  await loadCRs(); render();
+}
+
+function downloadCSV() {
+  const rows = getFiltered();
+  const h = ['Date','Customer','Request','Criticality','Efforts (days)','CCB Decision','Notes'];
+  const csv = [h.join(','), ...rows.map(r=>[
+    r.created_at?new Date(r.created_at).toLocaleDateString('en-IN'):'',
+    `"${(r.customers?.name||'').replace(/"/g,'""')}"`,
+    `"${(r.request||'').replace(/"/g,'""')}"`,
+    r.criticality||'', r.efforts||'', r.ccb_decision||'',
+    `"${(r.notes||'').replace(/"/g,'""')}"`
+  ].join(','))].join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`change-requests-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+function getFiltered() {
+  return crs.filter(r =>
+    (!filterCust || r.customer_id===filterCust) &&
+    (!filterCrit || r.criticality===filterCrit) &&
+    (!filterCCB || r.ccb_decision===filterCCB)
+  );
+}
+
+function critBadge(c) {
+  const m={Low:'b-low',Medium:'b-med',High:'b-high',Critical:'b-crit'};
+  return `<span class="badge ${m[c]||'b-med'}">${c||'—'}</span>`;
+}
+function ccbBadge(c) {
+  const m={Approved:'b-app',Rejected:'b-rej',Pending:'b-pend',Deferred:'b-def'};
+  return `<span class="badge ${m[c]||'b-pend'}">${c||'—'}</span>`;
+}
+
+// ── RENDER SECTIONS ──
+
+function renderLogin() {
+  return `<div class="wrap"><div class="card">
+    <div class="logo-row"><div class="logo-box">📋</div><div class="page-h">Change Request Tracker</div></div>
+    <div class="sub">Sign in or create your account</div>
+    ${err?`<div class="err">${err}</div>`:''}
+    ${msg?`<div class="ok">${msg}</div>`:''}
+    <div class="fl"><label class="lbl">Email</label><input id="le" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')document.getElementById('sb').click()"></div>
+    <div class="fl"><label class="lbl">Password</label><input id="lp" type="password" placeholder="min. 6 characters" onkeydown="if(event.key==='Enter')document.getElementById('sb').click()"></div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button id="sb" class="btn btn-p" style="flex:1" onclick="signIn(document.getElementById('le').value,document.getElementById('lp').value)">${loading?'<span class="spin"></span>':'Sign In'}</button>
+      <button class="btn btn-g" style="flex:1" onclick="signUp(document.getElementById('le').value,document.getElementById('lp').value)">${loading?'<span class="spin"></span>':'Create Account'}</button>
+    </div>
+  </div></div>`;
+}
+
+function renderDashboard() {
+  const total=crs.length, approved=crs.filter(r=>r.ccb_decision==='Approved').length, pending=crs.filter(r=>r.ccb_decision==='Pending').length, crit=crs.filter(r=>r.criticality==='Critical').length;
+  return `<div class="content">
+    <div class="sgrid">
+      <div class="scard"><div class="slbl">Total CRs</div><div class="snum" style="color:var(--text)">${total}</div></div>
+      <div class="scard"><div class="slbl">Approved</div><div class="snum" style="color:var(--success)">${approved}</div></div>
+      <div class="scard"><div class="slbl">Pending CCB</div><div class="snum" style="color:var(--warn)">${pending}</div></div>
+      <div class="scard"><div class="slbl">Critical</div><div class="snum" style="color:var(--danger)">${crit}</div></div>
+    </div>
+    <div style="margin-bottom:18px;font-weight:600;font-size:14px;">Customers (${customers.length})</div>
+    ${customers.length===0?`<div class="empty" style="padding:30px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);margin-bottom:24px;"><div style="font-size:30px;margin-bottom:8px;">🏢</div><div style="font-weight:500;color:var(--text);margin-bottom:4px;">No customers yet</div><div style="font-size:13px;">Go to Customers tab to add your first one</div></div>`:`
+    <div class="cust-grid" style="margin-bottom:24px;">
+      ${customers.map(c=>`<div class="cust-card">
+        ${c.logo_url?`<img class="cust-logo" src="${c.logo_url}" onerror="this.style.display='none'">`:`<div class="cust-initials">${c.name.slice(0,2).toUpperCase()}</div>`}
+        <div class="cust-name">${c.name}</div>
+        ${c.poc_name?`<div class="cust-poc">POC: ${c.poc_name}</div>`:''}
+      </div>`).join('')}
+    </div>`}
+    <div class="tcard">
+      <div class="thead-row"><div style="font-weight:600;font-size:14px;">Recent Change Requests</div><button class="btn btn-g btn-sm" onclick="view='crs';render()">View All →</button></div>
+      ${crs.length===0?`<div class="empty"><div style="font-size:32px;margin-bottom:8px;">📝</div><div style="font-weight:500;color:var(--text);margin-bottom:4px;">No change requests yet</div><div style="font-size:13px;">Click "+ New CR" to log your first request</div></div>`:`
+      <table><thead><tr><th>Date</th><th>Customer</th><th>Request</th><th>Criticality</th><th>Efforts</th><th>CCB Decision</th></tr></thead>
+      <tbody>${crs.slice(0,6).map(r=>`<tr>
+        <td style="color:var(--text2);font-size:12px;">${r.created_at?new Date(r.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'-'}</td>
+        <td style="font-weight:500">${r.customers?.name||'-'}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.request||''}">${r.request||'-'}</td>
+        <td>${critBadge(r.criticality)}</td>
+        <td style="color:var(--text2)">${r.efforts?r.efforts+' days':'-'}</td>
+        <td>${ccbBadge(r.ccb_decision)}</td>
+      </tr>`).join('')}</tbody></table>`}
+    </div>
+  </div>`;
+}
+
+function renderCustomers() {
+  return `<div class="content">
+    ${customers.length===0?`<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🏢</div><div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">No customers yet</div><div style="font-size:13px;">Add your first customer using the button above</div></div>`:`
+    <div class="cust-grid">
+      ${customers.map(c=>`<div class="cust-card">
+        <button class="cust-del" onclick="deleteCustomer('${c.id}')" title="Delete">✕</button>
+        ${c.logo_url?`<img class="cust-logo" src="${c.logo_url}" onerror="this.outerHTML='<div class=cust-initials>${c.name.slice(0,2).toUpperCase()}</div>'">`:`<div class="cust-initials">${c.name.slice(0,2).toUpperCase()}</div>`}
+        <div class="cust-name">${c.name}</div>
+        ${c.poc_name?`<div class="cust-poc">${c.poc_name}</div>`:''}
+        ${c.poc_email?`<div class="cust-poc" style="font-size:11px;">${c.poc_email}</div>`:''}
+        <div class="cust-poc" style="font-size:11px;margin-top:2px;">${crs.filter(r=>r.customer_id===c.id).length} CR(s)</div>
+      </div>`).join('')}
+    </div>`}
+  </div>`;
+}
+
+function renderCRs() {
+  const rows = getFiltered();
+  return `<div class="content">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
+      <select style="flex:1;min-width:140px;" onchange="filterCust=this.value;render();">
+        <option value="">All Customers</option>
+        ${customers.map(c=>`<option value="${c.id}" ${filterCust===c.id?'selected':''}>${c.name}</option>`).join('')}
+      </select>
+      <select onchange="filterCrit=this.value;render();">
+        <option value="">All Criticality</option>
+        ${['Low','Medium','High','Critical'].map(v=>`<option value="${v}" ${filterCrit===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+      <select onchange="filterCCB=this.value;render();">
+        <option value="">All CCB Decisions</option>
+        ${['Pending','Approved','Rejected','Deferred'].map(v=>`<option value="${v}" ${filterCCB===v?'selected':''}>${v}</option>`).join('')}
+      </select>
+    </div>
+    <div class="tcard">
+      <div class="thead-row">
+        <div style="font-weight:600;font-size:14px;">${rows.length} Request${rows.length!==1?'s':''}</div>
+        <button class="btn btn-sm" style="background:rgba(52,211,153,.15);color:#34d399;border:1px solid rgba(52,211,153,.25);" onclick="downloadCSV()">⬇ Export CSV</button>
+      </div>
+      ${rows.length===0?`<div class="empty"><div style="font-size:32px;margin-bottom:8px;">🔍</div><div style="font-weight:500;color:var(--text);">No requests found</div></div>`:`
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Date</th><th>Customer</th><th>Request</th><th>Criticality</th><th>Efforts</th><th>CCB Decision</th><th>Notes</th><th>Actions</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr>
+          <td style="color:var(--text2);font-size:12px;white-space:nowrap;">${r.created_at?new Date(r.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'-'}</td>
+          <td style="font-weight:500;white-space:nowrap;">${r.customers?.name||'-'}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.request||''}">${r.request||'-'}</td>
+          <td>${critBadge(r.criticality)}</td>
+          <td style="color:var(--text2);text-align:center;">${r.efforts?r.efforts+'d':'-'}</td>
+          <td>${ccbBadge(r.ccb_decision)}</td>
+          <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:12px;" title="${r.notes||''}">${r.notes||'-'}</td>
+          <td><div style="display:flex;gap:5px;">
+            <button class="btn btn-g btn-sm" onclick="startEditCR('${r.id}')">Edit</button>
+            <button class="btn btn-d btn-sm" onclick="deleteCRRecord('${r.id}')">Del</button>
+          </div></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+  </div>`;
+}
+
+function startEditCR(id) { editCR=crs.find(r=>r.id===id); showCRModal=true; render(); }
+
+function renderCustModal() {
+  if (!showCustModal) return '';
+  return `<div class="ov" onclick="if(event.target===this){showCustModal=false;logoDataUrl='';render();}">
+    <div class="modal">
+      <h3>Add Customer</h3>
+      <div class="fl"><label class="lbl">Customer Name *</label><input id="cn" placeholder="e.g. Cognizant"></div>
+      <div class="fl"><label class="lbl">POC Name</label><input id="cp" placeholder="Point of Contact name"></div>
+      <div class="fl"><label class="lbl">POC Email</label><input id="ce" type="email" placeholder="poc@company.com"></div>
+      <div class="fl">
+        <label class="lbl">Company Logo</label>
+        <div class="upload-zone" onclick="document.getElementById('logo-inp').click()">
+          ${logoDataUrl?`<img src="${logoDataUrl}" class="upload-preview"><div style="font-size:12px;color:var(--text2);">Click to change</div>`:`<div style="font-size:28px;margin-bottom:6px;">🖼</div><div style="font-size:13px;color:var(--text2);">Click to upload logo</div><div style="font-size:11px;color:var(--text3);margin-top:3px;">PNG, JPG, SVG</div>`}
+          <input id="logo-inp" type="file" accept="image/*" style="display:none" onchange="handleLogo(this)">
+        </div>
+      </div>
+      <div class="mac">
+        <button class="btn btn-g" onclick="showCustModal=false;logoDataUrl='';render();">Cancel</button>
+        <button class="btn btn-p" style="width:auto;" onclick="saveCustomer(document.getElementById('cn').value,document.getElementById('cp').value,document.getElementById('ce').value,logoDataUrl)">${loading?'<span class="spin"></span>':'Add Customer'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function handleLogo(inp) {
+  const file = inp.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { logoDataUrl = e.target.result; render(); };
+  reader.readAsDataURL(file);
+}
+
+function renderCRModal() {
+  if (!showCRModal) return '';
+  const c = editCR || {};
+  if (customers.length===0) return `<div class="ov" onclick="if(event.target===this){showCRModal=false;render();}"><div class="modal"><h3>New Change Request</h3><div class="err">Please add a customer first before creating a change request.</div><div class="mac"><button class="btn btn-g" onclick="showCRModal=false;render();">Close</button><button class="btn btn-p" style="width:auto;" onclick="showCRModal=false;view='customers';render();">Go to Customers →</button></div></div></div>`;
+  return `<div class="ov" onclick="if(event.target===this){showCRModal=false;editCR=null;render();}">
+    <div class="modal">
+      <h3>${editCR?'Edit Change Request':'New Change Request'}</h3>
+      <div class="fl">
+        <label class="lbl">Customer *</label>
+        <select id="m-cust">
+          <option value="">— Select Customer —</option>
+          ${customers.map(cu=>`<option value="${cu.id}" ${c.customer_id===cu.id?'selected':''}>${cu.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fl"><label class="lbl">Change Request / Description *</label><textarea id="m-req" placeholder="Describe the change being requested...">${c.request||''}</textarea></div>
+      <div class="row2">
+        <div class="fl">
+          <label class="lbl">Criticality</label>
+          <select id="m-crit">${['Low','Medium','High','Critical'].map(v=>`<option value="${v}" ${(c.criticality||'Medium')===v?'selected':''}>${v}</option>`).join('')}</select>
+        </div>
+        <div class="fl">
+          <label class="lbl">Efforts (days)</label>
+          <input id="m-eff" type="number" min="0" step="0.5" placeholder="e.g. 3" value="${c.efforts||''}">
+        </div>
+      </div>
+      <div class="fl">
+        <label class="lbl">CCB Decision</label>
+        <select id="m-ccb">${['Pending','Approved','Rejected','Deferred'].map(v=>`<option value="${v}" ${(c.ccb_decision||'Pending')===v?'selected':''}>${v}</option>`).join('')}</select>
+      </div>
+      <div class="fl"><label class="lbl">Notes</label><textarea id="m-notes" placeholder="Any additional notes or comments..." style="min-height:60px;">${c.notes||''}</textarea></div>
+      <div class="mac">
+        <button class="btn btn-g" onclick="showCRModal=false;editCR=null;render();">Cancel</button>
+        <button class="btn btn-p" style="width:auto;" onclick="
+          saveCRRecord({
+            customer_id:document.getElementById('m-cust').value,
+            request:document.getElementById('m-req').value,
+            criticality:document.getElementById('m-crit').value,
+            efforts:document.getElementById('m-eff').value||null,
+            ccb_decision:document.getElementById('m-ccb').value,
+            notes:document.getElementById('m-notes').value
+          })
+        ">${loading?'<span class="spin"></span>':(editCR?'Save Changes':'Create CR')}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderApp() {
+  const navs=[{id:'dashboard',ic:'◼',lb:'Dashboard'},{id:'customers',ic:'🏢',lb:'Customers'},{id:'crs',ic:'≡',lb:'Change Requests'}];
+  const titles={dashboard:'Dashboard',customers:'Customers',crs:'Change Requests'};
+  const btns={customers:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="showCustModal=true;logoDataUrl='';render()">+ Add Customer</button>`,crs:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`,dashboard:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`};
+  return `<div class="app">
+    <div class="side">
+      <div class="side-logo"><div class="logo-box" style="width:28px;height:28px;font-size:14px;">📋</div>CR Tracker</div>
+      ${navs.map(n=>`<div class="nav ${view===n.id?'on':''}" onclick="view='${n.id}';render();">${n.ic} ${n.lb}</div>`).join('')}
+      <div class="side-btm">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div class="av">${user?.email?.slice(0,2).toUpperCase()||'U'}</div>
+          <div style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${user?.email||''}</div>
+        </div>
+        <button class="btn btn-g btn-sm" style="width:100%;" onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+    <div class="main">
+      <div class="topbar"><div class="ptitle">${titles[view]||''}</div>${btns[view]||''}</div>
+      ${view==='dashboard'?renderDashboard():''}
+      ${view==='customers'?renderCustomers():''}
+      ${view==='crs'?renderCRs():''}
+    </div>
+  </div>
+  ${renderCustModal()}
+  ${renderCRModal()}`;
+}
+
+function render() {
+  document.getElementById('root').innerHTML = step==='login' ? renderLogin() : renderApp();
+}
+
+init();
+</script>
+</body>
+</html>
