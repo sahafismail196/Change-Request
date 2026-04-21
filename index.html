@@ -497,7 +497,7 @@ function renderApp() {
  {id:'dashboard',ic:'◼',lb:'Dashboard'},
  {id:'customers',ic:'🏢',lb:'Customers'},
  {id:'crs',ic:'≡',lb:'Change Requests'},
- {id:'reports',ic:'📊',lb:'Reports'} // 👈 ADD THIS LINE
+ {id:'reports',ic:'📊',lb:'Reports'}
 ];
   const titles={dashboard:'Dashboard',customers:'Customers',crs:'Change Requests'};
   const btns={customers:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="showCustModal=true;logoDataUrl='';render()">+ Add Customer</button>`,crs:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`,dashboard:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`};
@@ -518,7 +518,7 @@ function renderApp() {
       ${view==='dashboard'?renderDashboard():''}
 ${view==='customers'?renderCustomers():''}
 ${view==='crs'?renderCRs():''}
-${view==='reports'?renderReports():''} // 👈 ADD THIS
+${view==='reports'?renderReports():''}
     </div>
   </div>
   ${renderCustModal()}
