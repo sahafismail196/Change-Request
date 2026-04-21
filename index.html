@@ -124,7 +124,9 @@ let loading = false;
 let err = '', msg = '';
 let logoDataUrl = '';
 let logoFile = null;
-let filterCust = '', filterCrit = '', filterCCB = '';
+let filterCust = '';
+let filterCrit = '';
+let filterCCB = '';
 
 // ── AUTH ──
 async function init() {
@@ -345,7 +347,72 @@ function renderCRs() {
     </div>
   </div>`;
 }
+function renderReports() {
 
+  const total = crs.length;
+  const approved = crs.filter(r=>r.ccb_decision==='Approved').length;
+  const pending = crs.filter(r=>r.ccb_decision==='Pending').length;
+  const critical = crs.filter(r=>r.criticality==='Critical').length;
+
+  return `
+  <div class="content">
+
+    <div class="sgrid" style="margin-bottom:20px;">
+      <div class="scard">Total<br><b>${total}</b></div>
+      <div class="scard">Approved<br><b>${approved}</b></div>
+      <div class="scard">Pending<br><b>${pending}</b></div>
+      <div class="scard">Critical<br><b>${critical}</b></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:15px;">
+      <select onchange="filterCust=this.value;render();">
+        <option value="">All Customers</option>
+        ${customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+      </select>
+
+      <select onchange="filterCrit=this.value;render();">
+        <option value="">All Criticality</option>
+        ${['Low','Medium','High','Critical'].map(v=>`<option value="${v}">${v}</option>`).join('')}
+      </select>
+
+      <select onchange="filterCCB=this.value;render();">
+        <option value="">All Status</option>
+        ${['Pending','Approved','Rejected','Deferred'].map(v=>`<option value="${v}">${v}</option>`).join('')}
+      </select>
+
+      <button onclick="downloadCSV()">⬇ Export</button>
+    </div>
+
+    <div class="tcard">
+      <table width="100%">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Request</th>
+            <th>Criticality</th>
+            <th>Status</th>
+            <th>Effort</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${getFiltered().map(r=>`
+          <tr>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</td>
+            <td>${r.customers?.name || ''}</td>
+            <td>${r.request}</td>
+            <td>${critBadge(r.criticality)}</td>
+            <td>${r.ccb_decision}</td>
+            <td>${r.efforts || '-'}</td>
+          </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+  </div>`;
+}
+  
 function startEditCR(id) { editCR=crs.find(r=>r.id===id); showCRModal=true; render(); }
 
 function renderCustModal() {
@@ -426,7 +493,12 @@ function renderCRModal() {
 }
 
 function renderApp() {
-  const navs=[{id:'dashboard',ic:'◼',lb:'Dashboard'},{id:'customers',ic:'🏢',lb:'Customers'},{id:'crs',ic:'≡',lb:'Change Requests'}];
+  const navs=[
+ {id:'dashboard',ic:'◼',lb:'Dashboard'},
+ {id:'customers',ic:'🏢',lb:'Customers'},
+ {id:'crs',ic:'≡',lb:'Change Requests'},
+ {id:'reports',ic:'📊',lb:'Reports'} // 👈 ADD THIS LINE
+];
   const titles={dashboard:'Dashboard',customers:'Customers',crs:'Change Requests'};
   const btns={customers:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="showCustModal=true;logoDataUrl='';render()">+ Add Customer</button>`,crs:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`,dashboard:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`};
   return `<div class="app">
@@ -444,8 +516,9 @@ function renderApp() {
     <div class="main">
       <div class="topbar"><div class="ptitle">${titles[view]||''}</div>${btns[view]||''}</div>
       ${view==='dashboard'?renderDashboard():''}
-      ${view==='customers'?renderCustomers():''}
-      ${view==='crs'?renderCRs():''}
+${view==='customers'?renderCustomers():''}
+${view==='crs'?renderCRs():''}
+${view==='reports'?renderReports():''} // 👈 ADD THIS
     </div>
   </div>
   ${renderCustModal()}
