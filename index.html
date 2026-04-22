@@ -497,14 +497,21 @@ function renderApp() {
  {id:'dashboard',ic:'◼',lb:'Dashboard'},
  {id:'customers',ic:'🏢',lb:'Customers'},
  {id:'crs',ic:'≡',lb:'Change Requests'},
- {id:'reports',ic:'📊',lb:'Reports'}
+ {id:'reports',ic:'≡',lb:'Reports'}
 ];
   const titles={dashboard:'Dashboard',customers:'Customers',crs:'Change Requests'};
   const btns={customers:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="showCustModal=true;logoDataUrl='';render()">+ Add Customer</button>`,crs:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`,dashboard:`<button class="btn btn-p" style="width:auto;padding:8px 16px;" onclick="editCR=null;showCRModal=true;render()">+ New CR</button>`};
   return `<div class="app">
     <div class="side">
       <div class="side-logo"><div class="logo-box" style="width:28px;height:28px;font-size:14px;">📋</div>CR Tracker</div>
-      ${navs.map(n=>`<div class="nav ${view===n.id?'on':''}" onclick="view='${n.id}';render();">${n.ic} ${n.lb}</div>`).join('')}
+      ${navs.map(n=>`
+  <div class="nav ${view===n.id?'on':''}">
+    <span style="width:18px;display:inline-block;text-align:center;">
+      ${n.ic}
+    </span>
+    ${n.lb}
+  </div>
+`).join('')}
       <div class="side-btm">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <div class="av">${user?.email?.slice(0,2).toUpperCase()||'U'}</div>
